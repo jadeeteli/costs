@@ -130,16 +130,53 @@ function fmtEUR(v) {
   return v.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
+function normTokens(s) {
+  return normalizeName(s).split(" ").filter(Boolean);
+}
+
 function buildCodeToProduct(products) {
   const normalizedProducts = {};
+  const productTokens = {};
   for (const p of products) {
     normalizedProducts[normalizeName(p)] = p;
+    productTokens[p] = normTokens(p);
   }
+
   const map = {};
+  const matched = new Set();
+
+  // Pass 1: exact normalized-name match (unchanged behavior)
   for (const { code, name } of CODE_MAP) {
-    const match = normalizedProducts[normalizeName(name)];
-    if (match) map[code] = match;
+    const exact = normalizedProducts[normalizeName(name)];
+    if (exact) {
+      map[code] = exact;
+      matched.add(exact);
+    }
   }
+
+  // Pass 2: fuzzy fallback — catches suffix differences like
+  // "IMPRESO DIPLOMA DE INICIACIÓN" vs "...(original y 3 copias)"
+  const THRESHOLD = 0.8;
+  for (const { code, name } of CODE_MAP) {
+    if (map[code]) continue;
+    const codeTokens = normTokens(name);
+    let best = null, bestScore = 0;
+    for (const p of products) {
+      if (matched.has(p)) continue;
+      const pTokens = productTokens[p];
+      const shorter = Math.min(codeTokens.length, pTokens.length);
+      if (shorter === 0) continue;
+      const setB = new Set(pTokens);
+      const overlap = codeTokens.filter((t) => setB.has(t)).length;
+      const score = overlap / shorter; // containment ratio, not union-based Jaccard
+      if (score > bestScore) { bestScore = score; best = p; }
+    }
+    if (best && bestScore >= THRESHOLD) {
+      map[code] = best;
+      matched.add(best);
+    }
+  }
+
   return map;
 }
 
