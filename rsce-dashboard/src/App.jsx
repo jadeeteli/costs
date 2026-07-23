@@ -1447,6 +1447,98 @@ function ColaboradorasTab({ products, categories, data, years, year, setYear, pr
     return byCat;
   }, [products, data, year, productToCode]);
 
+  const orderedCategories = categories.filter((c) => rowsByCategory[c] && rowsByCategory[c].length > 0);
+
+  const handleExport = useCallback(() => {
+    const rows = [["Concepto", "Código", "Precio"]];
+    for (const cat of orderedCategories) {
+      rows.push([cat, "", ""]);
+      for (const r of rowsByCategory[cat]) {
+        rows.push([r.product, r.code, r.price]);
+      }
+      rows.push(["", "", ""]);
+    }
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Impreso Colaboradoras");
+    XLSX.writeFile(wb, `Impreso_Colaboradoras_${year}.xlsx`);
+  }, [orderedCategories, rowsByCategory, year]);
+
+  return (
+    <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
+      <div style={{ background: "white", borderRadius: 10, border: "1px solid #E5DFD1", padding: "18px 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Georgia', serif", color: "#20242C" }}>
+              Impreso Colaboradoras
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>
+              Precios sin IVA (Colaboradoras Caninas) — vista de solo lectura, generada a partir de los datos actuales del panel
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #D4CDBB", fontSize: 13, fontFamily: "inherit", background: "white", color: "#20242C" }}
+            >
+              {years.map((y) => (
+                <option key={y} value={y} style={{ color: "#20242C", background: "white" }}>{y}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleExport}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                background: "#B98A3F", color: "#1C2B45", border: "none",
+                padding: "8px 14px", borderRadius: 6, fontWeight: 600, fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              <Download size={15} /> Exportar esta vista
+            </button>
+          </div>
+        </div>
+
+        {orderedCategories.length === 0 ? (
+          <div style={{ fontSize: 13, opacity: 0.6, padding: "20px 0" }}>
+            No hay precios de Colaboradoras Caninas registrados para {year}.
+          </div>
+        ) : (
+          orderedCategories.map((cat) => (
+            <div key={cat} style={{ marginBottom: 20 }}>
+              <div style={{
+                fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5,
+                color: "#5C7A5E", padding: "8px 0", borderBottom: "2px solid #EFEAE0", marginBottom: 6,
+              }}>
+                {cat}
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", opacity: 0.55, fontSize: 11, textTransform: "uppercase" }}>
+                    <th style={{ padding: "4px 0", width: "60%", textAlign: "left" }}>Concepto</th>
+                    <th style={{ padding: "4px 0", textAlign: "left" }}>Código</th>
+                    <th style={{ padding: "4px 0", textAlign: "left" }}>Precio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rowsByCategory[cat].map((r) => (
+                    <tr key={r.product} style={{ borderTop: "1px solid #F5F1E6" }}>
+                      <td style={{ padding: "6px 0", paddingRight: 12, textAlign: "left" }}>{r.product}</td>
+                      <td style={{ padding: "6px 0", opacity: 0.75, textAlign: "left" }}>{r.code}</td>
+                      <td style={{ padding: "6px 0", fontWeight: 600, textAlign: "left" }}>{fmtEUR(r.price)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ComparativaAnualTab({ products, categories, data, years, yearA, setYearA, yearB, setYearB, productToCode }) {
   const rowsByCategory = useMemo(() => {
     const byCat = {};
@@ -1459,7 +1551,6 @@ function ComparativaAnualTab({ products, categories, data, years, yearA, setYear
       const memberB = valueForYear(rec.prices.Member || [], "with_vat", yearB);
       const userB = valueForYear(rec.prices.User || [], "with_vat", yearB);
 
-      // skip products with nothing to show in either selected year
       if (!memberA && !userA && !memberB && !userB) continue;
 
       const memberNoVatA = valueForYear(rec.prices.Member || [], "no_vat", yearA);
@@ -1640,43 +1731,70 @@ function ComparativaAnualTab({ products, categories, data, years, yearA, setYear
 
   const orderedCategories = categories.filter((c) => rowsByCategory[c] && rowsByCategory[c].length > 0);
 
- const handleExport = useCallback(() => {
-    const rows = [["Concepto", "Código", "Precio"]];
+  const handleExport = useCallback(() => {
+    const rows = [[
+      "Concepto", "Código",
+      `Socios ${yearA}`, `Socios sin IVA ${yearA}`, `Usuarios ${yearA}`, `Usuarios sin IVA ${yearA}`, `Colaboradoras ${yearA}`,
+      `Socios ${yearB}`, `Socios sin IVA ${yearB}`, `Usuarios ${yearB}`, `Usuarios sin IVA ${yearB}`, `Colaboradoras ${yearB}`,
+      "% Var. Socios", "% Var. Usuarios",
+    ]];
     for (const cat of orderedCategories) {
-      rows.push([cat, "", ""]);
+      rows.push([cat, "", "", "", "", "", "", "", "", "", "", "", "", ""]);
       for (const r of rowsByCategory[cat]) {
-        rows.push([r.product, r.code, r.price]);
+        rows.push([
+          r.product, r.code,
+          r.memberA ?? "", r.memberNoVatA ?? "", r.userA ?? "", r.userNoVatA ?? "", r.collabA ?? "",
+          r.memberB ?? "", r.memberNoVatB ?? "", r.userB ?? "", r.userNoVatB ?? "", r.collabB ?? "",
+          r.memberPct !== null ? Math.round(r.memberPct * 1000) / 10 : "",
+          r.userPct !== null ? Math.round(r.userPct * 1000) / 10 : "",
+        ]);
       }
-      rows.push(["", "", ""]);
+      rows.push(["", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
     }
     const ws = XLSX.utils.aoa_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Impreso Colaboradoras");
-    XLSX.writeFile(wb, `Impreso_Colaboradoras_${year}.xlsx`);
-  }, [orderedCategories, rowsByCategory, year]);
+    XLSX.utils.book_append_sheet(wb, ws, "Comparativa Anual");
+    XLSX.writeFile(wb, `Comparativa_${yearA}_vs_${yearB}.xlsx`);
+  }, [orderedCategories, rowsByCategory, yearA, yearB]);
 
   return (
-    <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
+    <div style={{ maxWidth: 1500, margin: "0 auto", padding: "24px 32px" }}>
       <div style={{ background: "white", borderRadius: 10, border: "1px solid #E5DFD1", padding: "18px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Georgia', serif", color: "#20242C" }}>
-              Impreso Colaboradoras
+              Comparativa Anual
             </div>
             <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>
-              Precios sin IVA (Colaboradoras Caninas) — vista de solo lectura, generada a partir de los datos actuales del panel
+              Compara Socios, Usuarios y Colaboradoras entre dos años a elegir
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <select
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #D4CDBB", fontSize: 13, fontFamily: "inherit", background: "white", color: "#20242C" }}
-            >
-              {years.map((y) => (
-                <option key={y} value={y} style={{ color: "#20242C", background: "white" }}>{y}</option>
-              ))}
-            </select>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label style={{ fontSize: 12.5, opacity: 0.7 }}>Año A:</label>
+              <select
+                value={yearA}
+                onChange={(e) => setYearA(Number(e.target.value))}
+                style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #D4CDBB", fontSize: 13, fontFamily: "inherit", background: "white", color: "#20242C" }}
+              >
+                {years.map((y) => (
+                  <option key={y} value={y} style={{ color: "#20242C", background: "white" }}>{y}</option>
+                ))}
+              </select>
+            </div>
+            <span style={{ fontSize: 13, opacity: 0.6, fontWeight: 600 }}>vs</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label style={{ fontSize: 12.5, opacity: 0.7 }}>Año B:</label>
+              <select
+                value={yearB}
+                onChange={(e) => setYearB(Number(e.target.value))}
+                style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #D4CDBB", fontSize: 13, fontFamily: "inherit", background: "white", color: "#20242C" }}
+              >
+                {years.map((y) => (
+                  <option key={y} value={y} style={{ color: "#20242C", background: "white" }}>{y}</option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={handleExport}
               style={{
@@ -1693,31 +1811,59 @@ function ComparativaAnualTab({ products, categories, data, years, yearA, setYear
 
         {orderedCategories.length === 0 ? (
           <div style={{ fontSize: 13, opacity: 0.6, padding: "20px 0" }}>
-            No hay precios de Colaboradoras Caninas registrados para {year}.
+            No hay precios registrados para {yearA} ni {yearB}.
           </div>
         ) : (
           orderedCategories.map((cat) => (
-            <div key={cat} style={{ marginBottom: 20 }}>
+            <div key={cat} style={{ marginBottom: 20, overflowX: "auto" }}>
               <div style={{
                 fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5,
-                color: "#5C7A5E", padding: "8px 0", borderBottom: "2px solid #EFEAE0", marginBottom: 6,
+                color: "#B98A3F", padding: "8px 0", borderBottom: "2px solid #EFEAE0", marginBottom: 6,
               }}>
                 {cat}
               </div>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 1100 }}>
                 <thead>
-                  <tr style={{ textAlign: "left", opacity: 0.55, fontSize: 11, textTransform: "uppercase" }}>
-                    <th style={{ padding: "4px 0", width: "60%", textAlign: "left" }}>Concepto</th>
-                    <th style={{ padding: "4px 0", textAlign: "left" }}>Código</th>
-                    <th style={{ padding: "4px 0", textAlign: "left" }}>Precio</th>
+                  <tr style={{ textAlign: "left", opacity: 0.55, fontSize: 10.5, textTransform: "uppercase" }}>
+                    <th style={{ padding: "4px 8px 4px 0", textAlign: "left" }}>Concepto</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Código</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left", borderLeft: "1px solid #EFEAE0" }}>Socios {yearA}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Socios sin IVA {yearA}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Usuarios {yearA}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Usuarios sin IVA {yearA}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Colaboradoras {yearA}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left", borderLeft: "1px solid #EFEAE0" }}>Socios {yearB}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Socios sin IVA {yearB}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Usuarios {yearB}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Usuarios sin IVA {yearB}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Colaboradoras {yearB}</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left", borderLeft: "1px solid #EFEAE0" }}>% Var. Socios</th>
+                    <th style={{ padding: "4px 8px", textAlign: "left" }}>% Var. Usuarios</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rowsByCategory[cat].map((r) => (
                     <tr key={r.product} style={{ borderTop: "1px solid #F5F1E6" }}>
-                      <td style={{ padding: "6px 0", paddingRight: 12, textAlign: "left" }}>{r.product}</td>
-                      <td style={{ padding: "6px 0", opacity: 0.75, textAlign: "left" }}>{r.code}</td>
-                      <td style={{ padding: "6px 0", fontWeight: 600, textAlign: "left" }}>{fmtEUR(r.price)}</td>
+                      <td style={{ padding: "6px 8px 6px 0", textAlign: "left" }}>{r.product}</td>
+                      <td style={{ padding: "6px 8px", opacity: 0.75, textAlign: "left" }}>{r.code || "—"}</td>
+                      <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left", borderLeft: "1px solid #F5F1E6" }}>{r.memberA !== null ? fmtEUR(r.memberA) : "—"}</td>
+                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.memberNoVatA !== null ? fmtEUR(r.memberNoVatA) : "—"}</td>
+                      <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left" }}>{r.userA !== null ? fmtEUR(r.userA) : "—"}</td>
+                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.userNoVatA !== null ? fmtEUR(r.userNoVatA) : "—"}</td>
+                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.collabA !== null ? fmtEUR(r.collabA) : "—"}</td>
+                      <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left", borderLeft: "1px solid #F5F1E6" }}>{r.memberB !== null ? fmtEUR(r.memberB) : "—"}</td>
+                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.memberNoVatB !== null ? fmtEUR(r.memberNoVatB) : "—"}</td>
+                      <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left" }}>{r.userB !== null ? fmtEUR(r.userB) : "—"}</td>
+                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.userNoVatB !== null ? fmtEUR(r.userNoVatB) : "—"}</td>
+                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.collabB !== null ? fmtEUR(r.collabB) : "—"}</td>
+                      <td style={{ padding: "6px 8px", textAlign: "left", borderLeft: "1px solid #F5F1E6", display: "flex", alignItems: "center", gap: 4 }}>
+                        <TrendIcon v={r.memberPct} /> {fmtPct(r.memberPct)}
+                      </td>
+                      <td style={{ padding: "6px 8px", textAlign: "left" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <TrendIcon v={r.userPct} /> {fmtPct(r.userPct)}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1728,7 +1874,7 @@ function ComparativaAnualTab({ products, categories, data, years, yearA, setYear
       </div>
     </div>
   );
-}
+
 
 function ComparisonCard({ label, value }) {
   return (
