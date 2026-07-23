@@ -229,6 +229,9 @@ const MANUAL_CODE_OVERRIDES = {
   "PEDIGREE_RSCE PREMIUM CUATRO GENERACIONES CON TRANSFERENCIA": "11200020",
   "PEDIGREE_RSCE PREMIUM CUATRO GENERACIONES SIN TRANSFERENCIA": "11200023",
   "MEJORA DE PEDIGREEACCESS LBO A PEDIGREE TRES GENERACIONES SIN TRANSFERENCIA": "11200019",
+  "PEDIGREE_RSCE PREMIUM TRES GENERACIONES CON TRANSFERENCIA": "11200032",
+    "MEJORA DE PEDIGREEACCESS LBO A PEDIGREE CUATRO GENERACIONES SIN TRANSFERENCIA": "11200033",
+
 };
 
   function RSCEDashboard() {
@@ -1269,6 +1272,8 @@ useEffect(() => {
           years={years}
           year={tarifaWebYear}
           setYear={setTarifaWebYear}
+          productToCode={productToCode}
+
         />
       )}
 
@@ -1289,7 +1294,7 @@ useEffect(() => {
 
 
      
-function TarifaWebTab({ products, categories, data, years, year, setYear }) {
+function TarifaWebTab({ products, categories, data, years, year, setYear, productToCode }) {
   const rowsByCategory = useMemo(() => {
     const byCat = {};
     for (const p of products) {
