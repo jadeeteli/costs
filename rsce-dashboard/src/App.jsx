@@ -1427,19 +1427,19 @@ function ColaboradorasTab({ products, categories, data, years, year, setYear, pr
   const orderedCategories = categories.filter((c) => rowsByCategory[c] && rowsByCategory[c].length > 0);
 
   const handleExport = useCallback(() => {
-    const rows = [["Concepto", "Código", "Precio"]];
-    for (const cat of orderedCategories) {
-      rows.push([cat, "", ""]);
-      for (const r of rowsByCategory[cat]) {
-        rows.push([r.product, r.code, r.price]);
-      }
-      rows.push(["", "", ""]);
+  const rows = [["Concepto", "Código", "Socios RSCE", "Resto de Usuarios"]];
+  for (const cat of orderedCategories) {
+    rows.push([cat, "", "", ""]);
+    for (const r of rowsByCategory[cat]) {
+      rows.push([r.product, productToCode[r.product] || "", r.member ?? "", r.user ?? ""]);
     }
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Impreso Colaboradoras");
-    XLSX.writeFile(wb, `Impreso_Colaboradoras_${year}.xlsx`);
-  }, [orderedCategories, rowsByCategory, year]);
+    rows.push(["", "", "", ""]);
+  }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Tarifa Web");
+  XLSX.writeFile(wb, `Tarifa_Publicada_Web_${year}.xlsx`);
+}, [orderedCategories, rowsByCategory, year, productToCode]);
 
   return (
     <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
