@@ -228,10 +228,9 @@ const MANUAL_CODE_OVERRIDES = {
   "MEJORA DE PEDIGREE_RSCE ACCESS LBO A PEDIGREE_RSCE PREMIUM LOE CUATRO GENERACIONES SIN TRANSFERENCIA": "11200033",
   "PEDIGREE_RSCE PREMIUM CUATRO GENERACIONES CON TRANSFERENCIA": "11200020",
   "PEDIGREE_RSCE PREMIUM CUATRO GENERACIONES SIN TRANSFERENCIA": "11200023",
-  "MEJORA DE PEDIGREEACCESS LBO A PEDIGREE TRES GENERACIONES SIN TRANSFERENCIA": "11200019",
-  "PEDIGREE_RSCE PREMIUM TRES GENERACIONES CON TRANSFERENCIA": "11200032",
-    "MEJORA DE PEDIGREEACCESS LBO A PEDIGREE CUATRO GENERACIONES SIN TRANSFERENCIA": "11200033",
-
+  "MEJORA DE PEDIGREEACCESS LBO A PEDIGREE TRES GENERACIONES SIN TRANSFERENCIA": "11200032", 
+  "PEDIGREE_RSCE PREMIUM TRES GENERACIONES CON TRANSFERENCIA": "11200019", 
+  "MEJORA DE PEDIGREEACCESS LBO A PEDIGREE CUATRO GENERACIONES SIN TRANSFERENCIA": "11200033",
 };
 
   function RSCEDashboard() {
@@ -1381,21 +1380,23 @@ function TarifaWebTab({ products, categories, data, years, year, setYear, produc
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
-                  <tr style={{ textAlign: "left", opacity: 0.55, fontSize: 11, textTransform: "uppercase" }}>
-                    <th style={{ padding: "4px 0", width: "60%", textAlign: "left" }}>Concepto</th>
-                    <th style={{ padding: "4px 0", textAlign: "left" }}>Socios RSCE</th>
-                    <th style={{ padding: "4px 0", textAlign: "left" }}>Resto de Usuarios</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rowsByCategory[cat].map((r) => (
-                    <tr key={r.product} style={{ borderTop: "1px solid #F5F1E6" }}>
-                      <td style={{ padding: "6px 0", paddingRight: 12, textAlign: "left" }}>{r.product}</td>
-                      <td style={{ padding: "6px 0", fontWeight: 600, textAlign: "left" }}>{r.member !== null ? fmtEUR(r.member) : "—"}</td>
-                      <td style={{ padding: "6px 0", fontWeight: 600, textAlign: "left" }}>{r.user !== null ? fmtEUR(r.user) : "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
+  <tr style={{ textAlign: "left", opacity: 0.55, fontSize: 11, textTransform: "uppercase" }}>
+    <th style={{ padding: "4px 0", width: "50%", textAlign: "left" }}>Concepto</th>
+    <th style={{ padding: "4px 0", textAlign: "left" }}>Código</th>
+    <th style={{ padding: "4px 0", textAlign: "left" }}>Socios RSCE</th>
+    <th style={{ padding: "4px 0", textAlign: "left" }}>Resto de Usuarios</th>
+  </tr>
+</thead>
+<tbody>
+  {rowsByCategory[cat].map((r) => (
+    <tr key={r.product} style={{ borderTop: "1px solid #F5F1E6" }}>
+      <td style={{ padding: "6px 0", paddingRight: 12, textAlign: "left" }}>{r.product}</td>
+      <td style={{ padding: "6px 0", opacity: 0.75, textAlign: "left" }}>{productToCode[r.product] || "—"}</td>
+      <td style={{ padding: "6px 0", fontWeight: 600, textAlign: "left" }}>{r.member !== null ? fmtEUR(r.member) : "—"}</td>
+      <td style={{ padding: "6px 0", fontWeight: 600, textAlign: "left" }}>{r.user !== null ? fmtEUR(r.user) : "—"}</td>
+    </tr>
+  ))}
+</tbody>
               </table>
             </div>
           ))
