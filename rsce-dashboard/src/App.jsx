@@ -310,6 +310,9 @@ const MANUAL_CODE_OVERRIDES = {
   "RECARGO POR INSCRIPCIÓN DE CACHORRO ACCESS LBO/RBR con más de 12 meses y menos de 18 meses de edad": "11400007",
 };
 
+console.log("PRODUCT:", JSON.stringify(product));
+
+
 const CATEGORY_OVERRIDES = {
   // AFIJOS
   "SOLICITUD DE AFIJO": "AFIJOS",
