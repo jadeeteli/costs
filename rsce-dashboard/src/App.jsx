@@ -232,10 +232,78 @@ const MANUAL_CODE_OVERRIDES = {
   "PEDIGREE_RSCE PREMIUM TRES GENERACIONES CON TRANSFERENCIA": "11200019", 
   "MEJORA DE PEDIGREEACCESS LBO A PEDIGREE CUATRO GENERACIONES SIN TRANSFERENCIA": "11200033",
   "CESION TEMPORAL DE PROPIEDAD DE LOS REPRODUCTORES" : "11300002",
-  "TRANSFERENCIA DE PROPIEDAD EN PEDIGREE, REGISTRO INICIAL O PERRO IMPORTADO": "11300001",
+  "TRANSFERENCIA DE PROPIEDAD REGISTRO INICIAL O PERRO IMPORTADO": "11300001",
   "TRAMITACIÓN URGENTE DE CERTIFICADOS DE COLA CORTA": "12100003",
   "TRAMITACIÓN URGENTE DE CERTIFICADOS DE TRABAJO": "12100004",
-  "ANOTACIÓN PRUEBA DE DISPLASIA": "50000005" 
+  "ANOTACIÓN PRUEBA DE DISPLASIA": "50000005",
+
+  // --- New overrides found from the highlighted cells in Tarifa_Publicada_Web_2026 ---
+
+  // 36000004: code exists in CODE_MAP but under wording ("...JAURÍA GRUPO 6º") too different
+  // from your product's phrasing ("...QUE PUEDAN COMPONER UNA JAURÍA...") to fuzzy-match.
+  "4ª CARTILLA Y SUCESIVAS HASTA EL NÚMERO MÁXIMO DE PERROS QUE PUEDAN COMPONER UNA JAURÍA (según Reglamento)": "36000004",
+
+  // 19900002 exists once in CODE_MAP as a generic "PLUS ENVIO CARTILLA POR MENSAJERIA" —
+  // you have two near-duplicate products for it (propietario / guía); pin both explicitly
+  // so the second one doesn't fall through unmatched.
+  "PLUS ENVÍO CARTILLA POR MENSAJERÍA (hasta un máximo de 10 cartillas por propietario)": "19900002",
+  "PLUS ENVÍO CARTILLA POR MENSAJERÍA (hasta un máximo de 10 cartillas por guía)": "19900002",
+
+  // 11800001 exact-matches "IMPRESO ALTA DE CAMADA (PERROS DE RAZA)" first, starving the
+  // plain "IMPRESO ALTA DE CAMADA" product that your tariff actually assigns it to.
+  "IMPRESO ALTA DE CAMADA": "11800001",
+
+  // 11100003 in CODE_MAP is worded without "PROCEDENTES", so it exact-matches the other,
+  // similarly-named product instead of this one.
+  "INSCRIPCIÓN PERROS PROCEDENTES DE OTROS LIBROS GENEALÓGICOS": "11100003",
+
+  // 11400001 / 11400002 are worded "...PREMIUM LOE/RRC..." and would rather match your
+  // PREMIUM-specific variants than these generic-named ones.
+  "RECARGO POR INSCRIPCIÓN DE CACHORRO con más de 6 meses y menos de 9 meses de edad": "11400001",
+  "RECARGO POR INSCRIPCIÓN DE CACHORRO con más de 9 meses y menos de 12 meses de edad": "11400002",
+
+  // 11800007 in CODE_MAP is worded "INFORMES SOLICITADOS A LA R.S.C.E...." which is a
+  // separate product of yours — this pins it to "EXPEDICIÓN DE INFORMES..." instead.
+  "EXPEDICIÓN DE INFORMES (precio por folio impreso)": "11800007",
+
+  // 12100002 ("PLUS POR TRAMITACIÓN URGENTE - CARTILLA") doesn't share enough tokens with
+  // "...DE CARTILLAS DE PRUEBAS DEPORTIVAS" (plural "cartillas" vs singular "cartilla").
+  "TRAMITACIÓN URGENTE DE CARTILLAS DE PRUEBAS DEPORTIVAS": "12100002",
+
+  // 45000008 ("CARTILLA ASISTENTE MONDIORING") would otherwise exact/fuzzy-match the older
+  // "CARTILLA ASISTENTE" product instead of "CARTILLA DE ASISTENTE".
+  "CARTILLA DE ASISTENTE": "45000008",
+
+  // 11200022 has a typo ("PREMIUN") and uses "3" instead of "TRES" in the catalog name,
+  // dropping it just below the fuzzy threshold.
+  "PEDIGREE_RSCE PREMIUM TRES GENERACIONES SIN TRANSFERENCIA": "11200022",
+
+  // 12300005 ("TITULO LATIN CHAMPION") competes against 3 near-identical product names;
+  // this pins it to the one with your current 2026 pricing (curly quotes, as in your data).
+  "EXPEDICIÓN TÍTULOS “LATIN CHAMPION”": "12300005",
+
+  // 11900001 ("FORMULARIO DE IDENTIFICACIÓN R.S.C.E") is worded too differently from
+  // "NOTIFICACIÓN NACIMIENTO CACHORRO (formulario de identificación)" to fuzzy-match.
+  "NOTIFICACIÓN NACIMIENTO CACHORRO (formulario de identificación)": "11900001",
+
+  // 11200021 in the catalog says "PREMIUN RRC 3 GENERACIONES..." — doesn't overlap enough
+  // with your "(sin genealógica completa)" wording.
+  "PEDIGREE_RSCE PREMIUM RRC (sin genealógica completa) CON TRANSFERENCIA": "11200021",
+
+  // 11200037: genuinely does not exist anywhere in CODE_MAP or XLSX_CODE_MAP — this is a
+  // true "nonexisting code" case, straight from your spreadsheet.
+  "PEDIGREE_RSCE PREMIUM RRC (sin genealógica completa) SIN TRANSFERENCIA": "11200037",
+
+  // 91000003 ("CUOTA ABONADO JOVEN") vs your product "CUOTA ABONO JOVEN" — one-word
+  // mismatch (ABONADO vs ABONO) drops it below threshold.
+  "CUOTA ABONO JOVEN": "91000003",
+
+  // These three share one generic catalog name ("RECARGO 100/200/300% ...ACCESS LBO/RBR"),
+  // so all 3 of your date-range variants tie on fuzzy score — pin them explicitly so the
+  // wrong one doesn't win the tie by iteration order.
+  "RECARGO POR INSCRIPCIÓN DE CACHORRO ACCESS LBO/RBR con más de 6 meses y menos de 9 meses de edad": "11400005",
+  "RECARGO POR INSCRIPCIÓN DE CACHORRO ACCESS LBO/RBR con más de 9 meses y menos de 12 meses de edad": "11400006",
+  "RECARGO POR INSCRIPCIÓN DE CACHORRO ACCESS LBO/RBR con más de 12 meses y menos de 18 meses de edad": "11400007",
 };
 
 
@@ -325,8 +393,10 @@ useEffect(() => {
 const handleAddProduct = useCallback(() => {
   const name = newProductName.trim();
   if (!name) return;
-  if (data[name]) {
-    alert("Ya existe un producto con ese nombre.");
+  const key = normalizeName(name);
+  const existing = products.find((p) => normalizeName(p) === key);
+  if (existing) {
+    alert(`Ya existe un producto muy similar: "${existing}".`);
     return;
   }
   const category = addingNewCategory
@@ -347,7 +417,7 @@ const handleAddProduct = useCallback(() => {
   setNewProductName("");
   setNewCategoryInput("");
   setAddingNewCategory(false);
-}, [newProductName, newProductCategory, newCategoryInput, addingNewCategory, data]);
+}, [newProductName, newProductCategory, newCategoryInput, addingNewCategory, data, products]);
 
 
 const handleAddYear = useCallback(() => {
@@ -395,17 +465,33 @@ const handleImportExcel = useCallback((file) => {
       oldCategoryByName[normalizeName(p)] = data[p]?.category || "Sin categorizar";
     }
 
+    // map normalized name -> canonical display name, so accent/spacing/punctuation
+    // variants of the same product (e.g. "CARTILLA DE  CAZA" vs "CARTILLA DE CAZA")
+    // collapse into a single entry instead of creating duplicates on import.
+    // Prefer the existing catalog's spelling when there's a match.
+    const canonicalByKey = {};
+    for (const p of products) {
+      canonicalByKey[normalizeName(p)] = p;
+    }
+
     const newData = {};
     const yearSet = new Set();
 
     for (const row of rows) {
       const year = Number(row.Year);
-      const product = String(row.Product || "").trim();
+      const rawProduct = String(row.Product || "").trim();
       const ct = row.Customer_Type;
-      if (!product || !year || !CT_ORDER.includes(ct)) continue;
+      if (!rawProduct || !year || !CT_ORDER.includes(ct)) continue;
+
+      const key = normalizeName(rawProduct);
+      let product = canonicalByKey[key];
+      if (!product) {
+        product = rawProduct;
+        canonicalByKey[key] = product;
+      }
 
       if (!newData[product]) {
-        const category = oldCategoryByName[normalizeName(product)] || "Sin categorizar";
+        const category = oldCategoryByName[key] || "Sin categorizar";
         newData[product] = { category, prices: { Member: [], User: [], Canine_Collaborator: [] } };
       }
       newData[product].prices[ct].push({
@@ -1583,6 +1669,8 @@ function ComparativaAnualTab({ products, categories, data, years, yearA, setYear
         collabB: collabB ? collabB.no_vat : null,
         memberPct: pctChange(memberA ? memberA.with_vat : null, memberB ? memberB.with_vat : null),
         userPct: pctChange(userA ? userA.with_vat : null, userB ? userB.with_vat : null),
+        collabPct: pctChange(collabA ? collabA.no_vat : null, collabB ? collabB.no_vat : null),
+
       });
     }
     return byCat;
@@ -1681,52 +1769,76 @@ function ComparativaAnualTab({ products, categories, data, years, yearA, setYear
               }}>
                 {cat}
               </div>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 1100 }}>
-                <thead>
-                  <tr style={{ textAlign: "left", opacity: 0.55, fontSize: 10.5, textTransform: "uppercase" }}>
-                    <th style={{ padding: "4px 8px 4px 0", textAlign: "left" }}>Concepto</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Código</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left", borderLeft: "1px solid #EFEAE0" }}>Socios {yearA}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Socios sin IVA {yearA}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Usuarios {yearA}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Usuarios sin IVA {yearA}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Colaboradoras {yearA}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left", borderLeft: "1px solid #EFEAE0" }}>Socios {yearB}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Socios sin IVA {yearB}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Usuarios {yearB}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Usuarios sin IVA {yearB}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>Colaboradoras {yearB}</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left", borderLeft: "1px solid #EFEAE0" }}>% Var. Socios</th>
-                    <th style={{ padding: "4px 8px", textAlign: "left" }}>% Var. Usuarios</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rowsByCategory[cat].map((r) => (
-                    <tr key={r.product} style={{ borderTop: "1px solid #F5F1E6" }}>
-                      <td style={{ padding: "6px 8px 6px 0", textAlign: "left" }}>{r.product}</td>
-                      <td style={{ padding: "6px 8px", opacity: 0.75, textAlign: "left" }}>{r.code || "—"}</td>
-                      <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left", borderLeft: "1px solid #F5F1E6" }}>{r.memberA !== null ? fmtEUR(r.memberA) : "—"}</td>
-                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.memberNoVatA !== null ? fmtEUR(r.memberNoVatA) : "—"}</td>
-                      <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left" }}>{r.userA !== null ? fmtEUR(r.userA) : "—"}</td>
-                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.userNoVatA !== null ? fmtEUR(r.userNoVatA) : "—"}</td>
-                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.collabA !== null ? fmtEUR(r.collabA) : "—"}</td>
-                      <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left", borderLeft: "1px solid #F5F1E6" }}>{r.memberB !== null ? fmtEUR(r.memberB) : "—"}</td>
-                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.memberNoVatB !== null ? fmtEUR(r.memberNoVatB) : "—"}</td>
-                      <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left" }}>{r.userB !== null ? fmtEUR(r.userB) : "—"}</td>
-                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.userNoVatB !== null ? fmtEUR(r.userNoVatB) : "—"}</td>
-                      <td style={{ padding: "6px 8px", textAlign: "left" }}>{r.collabB !== null ? fmtEUR(r.collabB) : "—"}</td>
-                      <td style={{ padding: "6px 8px", textAlign: "left", borderLeft: "1px solid #F5F1E6", display: "flex", alignItems: "center", gap: 4 }}>
-                        <TrendIcon v={r.memberPct} /> {fmtPct(r.memberPct)}
-                      </td>
-                      <td style={{ padding: "6px 8px", textAlign: "left" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          <TrendIcon v={r.userPct} /> {fmtPct(r.userPct)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 1400 }}>
+  <colgroup>
+    <col style={{ width: 220 }} />
+    <col style={{ width: 90 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 100 }} />
+  </colgroup>
+  <thead>
+    <tr style={{ textAlign: "left", opacity: 0.55, fontSize: 10.5, textTransform: "uppercase" }}>
+      <th style={{
+        padding: "4px 8px 4px 0", textAlign: "left", whiteSpace: "nowrap",
+        position: "sticky", left: 0, background: "white", zIndex: 1,
+      }}>Concepto</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap", borderRight: "1px solid #E5DFD1" }}>Código</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap", borderLeft: "1px solid #EFEAE0" }}>Socios {yearA}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>Socios sin IVA {yearA}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>Usuarios {yearA}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>Usuarios sin IVA {yearA}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>Colaboradoras {yearA}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap", borderLeft: "1px solid #EFEAE0" }}>Socios {yearB}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>Socios sin IVA {yearB}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>Usuarios {yearB}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>Usuarios sin IVA {yearB}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>Colaboradoras {yearB}</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap", borderLeft: "1px solid #EFEAE0" }}>% Var. Socios</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>% Var. Usuarios</th>
+      <th style={{ padding: "4px 8px", textAlign: "left", whiteSpace: "nowrap" }}>% Var. Colaboradoras</th>
+    </tr>
+  </thead>
+  <tbody>
+    {rowsByCategory[cat].map((r) => (
+      <tr key={r.product} style={{ borderTop: "1px solid #F5F1E6" }}>
+        <td style={{
+          padding: "6px 8px 6px 0", textAlign: "left",
+          position: "sticky", left: 0, background: "white", zIndex: 1,
+        }}>{r.product}</td>
+        <td style={{ padding: "6px 8px", opacity: 0.75, textAlign: "left", whiteSpace: "nowrap", borderRight: "1px solid #E5DFD1" }}>{r.code || "—"}</td>
+        <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left", whiteSpace: "nowrap", borderLeft: "1px solid #F5F1E6" }}>{r.memberA !== null ? fmtEUR(r.memberA) : "—"}</td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap" }}>{r.memberNoVatA !== null ? fmtEUR(r.memberNoVatA) : "—"}</td>
+        <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left", whiteSpace: "nowrap" }}>{r.userA !== null ? fmtEUR(r.userA) : "—"}</td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap" }}>{r.userNoVatA !== null ? fmtEUR(r.userNoVatA) : "—"}</td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap" }}>{r.collabA !== null ? fmtEUR(r.collabA) : "—"}</td>
+        <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left", whiteSpace: "nowrap", borderLeft: "1px solid #F5F1E6" }}>{r.memberB !== null ? fmtEUR(r.memberB) : "—"}</td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap" }}>{r.memberNoVatB !== null ? fmtEUR(r.memberNoVatB) : "—"}</td>
+        <td style={{ padding: "6px 8px", fontWeight: 600, textAlign: "left", whiteSpace: "nowrap" }}>{r.userB !== null ? fmtEUR(r.userB) : "—"}</td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap" }}>{r.userNoVatB !== null ? fmtEUR(r.userNoVatB) : "—"}</td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap" }}>{r.collabB !== null ? fmtEUR(r.collabB) : "—"}</td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap", borderLeft: "1px solid #F5F1E6" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><TrendIcon v={r.memberPct} /> {fmtPct(r.memberPct)}</span>
+        </td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><TrendIcon v={r.userPct} /> {fmtPct(r.userPct)}</span>
+        </td>
+        <td style={{ padding: "6px 8px", textAlign: "left", whiteSpace: "nowrap" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><TrendIcon v={r.collabPct} /> {fmtPct(r.collabPct)}</span>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
             </div>
           ))
         )}
