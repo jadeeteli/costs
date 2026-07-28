@@ -355,8 +355,9 @@ const CATEGORY_OVERRIDES = {
   const [overrides, setOverrides] = useState({}); // key `${product}::${ct}` -> number
 
   const [loading, setLoading] = useState(true);
-const [saveStatus, setSaveStatus] = useState("idle"); // 'idle' | 'saving' | 'saved' | 'error'
-const isFirstRun = useRef(true);
+  const [saveStatus, setSaveStatus] = useState("idle"); // 'idle' | 'saving' | 'saved' | 'error'
+  const isFirstRun = useRef(true);
+
 
 
 useEffect(() => {
@@ -487,6 +488,8 @@ const fileInputRef = useRef(null);
 const handleImportExcel = useCallback((file) => {
   const reader = new FileReader();
   reader.onload = (e) => {
+    console.error("IMPORT STARTED");
+    console.error("TEST 123")
     const wb = XLSX.read(e.target.result, { type: "array" });
     const sheetName = wb.SheetNames.includes("Data") ? "Data" : wb.SheetNames[0];
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: null });
