@@ -449,6 +449,13 @@ const CATEGORY_OVERRIDES = {
 
 };
 
+const HIDDEN_PRODUCTS = new Set([
+  "EXCEPCION, RECARGO 300% (más de 12 meses y menos de 18) Art, 5.k) Reglamento L.O.E.",
+  "PLUS ENVÍO CARTILLA POR MENSAJERÍA (hasta un máximo de 10 cartillas por guía)",
+  "RENOVACIÓN ANUAL LICIENCIA",
+  "TRAMITACIÓN URGENTE DE CARTILLAS DE ASISTENTE",
+]);
+
 
   function RSCEDashboard() {
   const [products, setProducts] = useState(() => [...RSCE_DATA.products]);
@@ -747,6 +754,7 @@ useEffect(() => {
   const q = query.trim().toLowerCase();
   const matchedByCode = codeToProduct[query.trim()];
   return products.filter((p) => {
+    if (HIDDEN_PRODUCTS.has(p)) return false;
     const matchesQuery = q === "" ||
       p.toLowerCase().includes(q) ||
       p === matchedByCode;
