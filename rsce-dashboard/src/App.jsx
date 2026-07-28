@@ -498,9 +498,9 @@ const handleImportExcel = useCallback((file) => {
 
       if (!newData[product]) {
         const category =
-          RSCE_DATA.data[product]?.category ||
-          oldCategoryByName[key] ||
-          "Sin categorizar";
+        RSCE_DATA.data[rsceProduct]?.category ||
+        oldCategoryByName[key] ||
+        "Sin categorizar";
 
         newData[product] = {
         category,
