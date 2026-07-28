@@ -314,23 +314,31 @@ const MANUAL_CODE_OVERRIDES = {
   "PEDIGREE_RSCE PLUS RRC CON TRANSFERENCIA": "11200021",
   "EXPEDICIÓN TITULOS DE CAMPEONES": "12300001",
   "CESIÓN TEMPORAL DE PROPIEDAD DE LA HEMBRA REPRODUCTORA": "11300002",
+  // --- Deduped / corrected overrides ---
   "RECARGO POR INSCRIPCION DE CACHORROACCESS LBO RBR CON MAS DE 12 MESES Y MENOS": "11400007",
   "RECARGO POR INSCRIPCION DE CACHORROACCESS LBO RBR CON MAS DE 6 MESES Y MENOS": "11400005",
   "RECARGO POR INSCRIPCION DE CACHORROACCESS LBO RBR CON MAS DE 9 MESES Y MENOS": "11400006",
-  "TRANSFERENCIA DE PROPIEDAD EN PEDIGREE, REGISTRO INICIAL O PERRO IMPORTADO":
-  "11300001",
 
-"PEDIGREE_RSCE PREMIUM TRES GENERACIONES SIN TRANSFERENCIA":
-  "11200022",
+  // Official code — belongs to this wording per CODE_MAP ("...EN REGISTRO INICIAL/PERRO IMPORTADO")
+  "TRANSFERENCIA DE PROPIEDAD REGISTRO INICIAL O PERRO IMPORTADO": "11300001",
 
-"EDIGREE_RSCE PREMIUM TRES GENERACIONES SIN TRANSFERENCIA":
-  "11200022",
+  // No official code exists for this variant — was colliding with the one above.
+  // TODO: likely a duplicate of the product directly above (2018-2024 predecessor?) —
+  // worth merging in your next category_fix.js pass instead of giving it its own code.
+  "TRANSFERENCIA DE PROPIEDAD EN PEDIGREE, REGISTRO INICIAL O PERRO IMPORTADO": null,
 
-"PEDIGREE_RSCE PLUS RRC CON TRANSFERENCIA":
-  "11200021",
+  "PEDIGREE_RSCE PREMIUM TRES GENERACIONES SIN TRANSFERENCIA": "11200022",
 
-"CESIÓN TEMPORAL DE PROPIEDAD DE LA HEMBRA REPRODUCTORA":
-  "11300002",
+  // TODO: "EDIGREE_RSCE..." (missing P) is a typo duplicate of the product above —
+  // merge it rather than coding it separately. Leaving unmapped for now.
+  "EDIGREE_RSCE PREMIUM TRES GENERACIONES SIN TRANSFERENCIA": null,
+
+  // 11200021 is officially PREMIUM RRC CON TRANSFERENCIA — PLUS RRC has no real code.
+  // Invented placeholder, following the same convention as 11200037.
+  "PEDIGREE_RSCE PLUS RRC CON TRANSFERENCIA": "11200040",
+
+  "EXPEDICIÓN TITULOS DE CAMPEONES": "12300001",
+  "CESIÓN TEMPORAL DE PROPIEDAD DE LA HEMBRA REPRODUCTORA": "11300002",
 
 };
 
@@ -1580,6 +1588,7 @@ function TarifaWebTab({ products, categories, data, years, year, setYear, produc
   const rowsByCategory = useMemo(() => {
     const byCat = {};
     for (const p of products) {
+      if (HIDDEN_PRODUCTS.has(p)) continue;
       const rec = data[p];
       const cat = rec.category || "Sin categorizar";
       const memberEntry = valueForYear(rec.prices.Member || [], "with_vat", year);
@@ -1692,7 +1701,9 @@ function TarifaWebTab({ products, categories, data, years, year, setYear, produc
 function ColaboradorasTab({ products, categories, data, years, year, setYear, productToCode }) {
   const rowsByCategory = useMemo(() => {
     const byCat = {};
-    for (const p of products) {
+    for (const p of products) {  
+      if (HIDDEN_PRODUCTS.has(p)) continue;
+
       const rec = data[p];
       const cat = rec.category || "Sin categorizar";
       const entry = valueForYear(rec.prices.Canine_Collaborator || [], "no_vat", year);
@@ -1803,6 +1814,8 @@ function ComparativaAnualTab({ products, categories, data, years, yearA, setYear
   const rowsByCategory = useMemo(() => {
     const byCat = {};
     for (const p of products) {
+        if (HIDDEN_PRODUCTS.has(p)) continue;
+
       const rec = data[p];
       const cat = rec.category || "Sin categorizar";
 
