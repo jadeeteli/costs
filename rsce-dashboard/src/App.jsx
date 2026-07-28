@@ -222,6 +222,7 @@ const RSCE_DATA = {"products":["1ª CARTILLA PERROS DE RASTRO DEL GRUPO 6º","2�
 
 
 
+
 // Manual overrides for products that have no reliable automatic match
 // (either genuinely missing from the code catalog, or worded too
 // differently to match safely). Add one line per product.
@@ -307,6 +308,32 @@ const MANUAL_CODE_OVERRIDES = {
   "RECARGO POR INSCRIPCIÓN DE CACHORRO ACCESS LBO/RBR con más de 6 meses y menos de 9 meses de edad": "11400005",
   "RECARGO POR INSCRIPCIÓN DE CACHORRO ACCESS LBO/RBR con más de 9 meses y menos de 12 meses de edad": "11400006",
   "RECARGO POR INSCRIPCIÓN DE CACHORRO ACCESS LBO/RBR con más de 12 meses y menos de 18 meses de edad": "11400007",
+};
+
+const CATEGORY_OVERRIDES = {
+  // AFIJOS
+  "SOLICITUD DE AFIJO": "AFIJOS",
+  "RECTIFICACIÓN DE AFIJO": "AFIJOS",
+  "DUPLICADO DE AFIJO": "AFIJOS",
+
+  // AGILITY
+  "CUOTA ANUAL CLUB DE AGILITY": "AGILITY",
+  "CARTILLA DE PRUEBAS DEPORTIVAS DE AGILITY": "AGILITY",
+  "3ª MEDICIÓN EJEMPLARES PARA DETERMINAR CATEGORÍA DE PARTICIPACIÓN (según Reglamento)": "AGILITY",
+
+  // INSCRIPCIONES
+  "BAJA DE UN PERRO EN EL L.O.E./R.R.C. (para su posterior inscripción de otros libros genealógicos)": "INSCRIPCIONES",
+  "INSCRIPCIÓN IMPORTADOS": "INSCRIPCIONES",
+  "INSCRIPCIÓN PERROS PROCEDENTES DE OTROS LIBROS GENEALÓGICOS": "INSCRIPCIONES",
+
+  // PEDIGRÍES PREMIUM LOE/RRC
+  "PEDIGREE_RSCE PREMIUM TRES GENERACIONES SIN TRANSFERENCIA": "PEDIGRÍES PREMIUM LOE/RRC",
+  "PEDIGREE_RSCE PREMIUM TRES GENERACIONES CON TRANSFERENCIA": "PEDIGRÍES PREMIUM LOE/RRC",
+  "PEDIGREE_RSCE PREMIUM CUATRO GENERACIONES CON TRANSFERENCIA": "PEDIGRÍES PREMIUM LOE/RRC",
+  "PEDIGREE_RSCE PREMIUM CUATRO GENERACIONES SIN TRANSFERENCIA": "PEDIGRÍES PREMIUM LOE/RRC",
+
+  // TRABAJO
+  "CARTILLA DE ASISTENTE": "TRABAJO (IGP / IGP-IFH / OBEDIENCIA / MONDIORING)",
 };
 
 
@@ -455,58 +482,22 @@ const fileInputRef = useRef(null);
 
 
 
-const handleImportExcel = useCallback((file) => {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const wb = XLSX.read(e.target.result, { type: "array" });
-    const sheetName = wb.SheetNames.includes("Data") ? "Data" : wb.SheetNames[0];
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: null });
-
-    // map normalized old product names -> category, so we keep categories where possible
-    const oldCategoryByName = {};
-    for (const p of products) {
-    oldCategoryByName[normalizeName(p)] =
-    RSCE_DATA.data[p]?.category ||
-    data[p]?.category ||
-    "Sin categorizar";
-    }
-
-    // map normalized name -> canonical display name, so accent/spacing/punctuation
-    // variants of the same product (e.g. "CARTILLA DE  CAZA" vs "CARTILLA DE CAZA")
-    // collapse into a single entry instead of creating duplicates on import.
-    // Prefer the existing catalog's spelling when there's a match.
-    const canonicalByKey = {};
-    for (const p of products) {
-      canonicalByKey[normalizeName(p)] = p;
-    }
-
-    const newData = {};
-    const yearSet = new Set();
-
-    for (const row of rows) {
-      const year = Number(row.Year);
-      const rawProduct = String(row.Product || "").trim();
-      const ct = row.Customer_Type;
-      if (!rawProduct || !year || !CT_ORDER.includes(ct)) continue;
-
-      const key = normalizeName(rawProduct);
-      let product = canonicalByKey[key];
-      if (!product) {
-        product = rawProduct;
-        canonicalByKey[key] = product;
-      }
+if (!newData[product]) {
+Show more lines
 
       if (!newData[product]) {
         const category =
-        RSCE_DATA.data[rsceProduct]?.category ||
-        oldCategoryByName[key] ||
-        "Sin categorizar";
+          CATEGORY_OVERRIDES[product] ||
+          RSCE_DATA.data[rsceProduct]?.category ||
+          oldCategoryByName[key] ||
+          "Sin categorizar";
 
         newData[product] = {
-        category,
-        prices: { Member: [], User: [], Canine_Collaborator: [] }
+          category,
+          prices: { Member: [], User: [], Canine_Collaborator: [] }
         };
       }
+
       newData[product].prices[ct].push({
         year,
         with_vat: row.Price_with_VAT === null ? null : Number(row.Price_with_VAT),
