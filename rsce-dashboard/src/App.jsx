@@ -23,6 +23,16 @@ const CT_COLORS = {
 };
 const CT_ORDER = ["Canine_Collaborator","Member", "User"];
 
+const COLLAB_CATEGORY_ORDER = [
+  "INSCRIPCIONES EN EL L.O.E./R.R.C.",
+  "PEDIGREES Y TRANSFERENCIA DE PROPIEDAD",
+  "AFIJOS",
+  "TRABAJO R.C.I. / OBEDIENCIA",
+  "AGILITY",
+  "MUESTRA, RASTRO Y MADRIGUERA",
+  "TARIFAS TRÁMITES CAMADAS",
+];
+
 function lastNonNull(series, field) {
   for (let i = series.length - 1; i >= 0; i--) {
     if (series[i][field] !== null && series[i][field] !== undefined) {
@@ -1613,7 +1623,7 @@ function TarifaWebTab({ products, categories, data, years, year, setYear, produc
     for (const p of products) {
       if (HIDDEN_PRODUCTS.has(p) || HIDDEN_IN_TARIFA_WEB.has(p)) continue;
       const rec = data[p];
-      const cat = rec.category || "Sin categorizar";
+      const cat = rec.category || "Sin categorizar";      
       const memberEntry = valueForYear(rec.prices.Member || [], "with_vat", year);
       const userEntry = valueForYear(rec.prices.User || [], "with_vat", year);
       if (!memberEntry && !userEntry) continue; // nothing to show for this year
@@ -1728,7 +1738,7 @@ function ColaboradorasTab({ products, categories, data, years, year, setYear, pr
       if (HIDDEN_PRODUCTS.has(p)) continue;
 
       const rec = data[p];
-      const cat = rec.category || "Sin categorizar";
+      const cat = rec.collab_category || rec.category || "Sin categorizar";
       const entry = valueForYear(rec.prices.Canine_Collaborator || [], "no_vat", year);
       if (!entry) continue; // only list items that apply to Colaboradoras Caninas
       if (!byCat[cat]) byCat[cat] = [];
@@ -1741,8 +1751,12 @@ function ColaboradorasTab({ products, categories, data, years, year, setYear, pr
     return byCat;
   }, [products, data, year, productToCode]);
 
-  const orderedCategories = categories.filter((c) => rowsByCategory[c] && rowsByCategory[c].length > 0);
-
+const orderedCategories = [
+  ...COLLAB_CATEGORY_ORDER.filter((c) => rowsByCategory[c]?.length),
+  ...Object.keys(rowsByCategory)
+    .filter((c) => !COLLAB_CATEGORY_ORDER.includes(c))
+    .sort((a, b) => a.localeCompare(b, "es")),
+];
   const handleExport = useCallback(() => {
     const rows = [["Concepto", "Código", "Precio"]];
     for (const cat of orderedCategories) {
