@@ -259,7 +259,6 @@ const MANUAL_CODE_OVERRIDES = {
 
   // 11100003 in CODE_MAP is worded without "PROCEDENTES", so it exact-matches the other,
   // similarly-named product instead of this one.
-  "INSCRIPCIÓN PERROS PROCEDENTES DE OTROS LIBROS GENEALÓGICOS": "11100003",
 
   // 11400001 / 11400002 are worded "...PREMIUM LOE/RRC..." and would rather match your
   // PREMIUM-specific variants than these generic-named ones.
@@ -461,7 +460,6 @@ const CATEGORY_OVERRIDES = {
 
   // 11100003 already exists for "...PROCEDENTES DE OTROS LIBROS..."; this is the
   // "(NO ADMITE PLUS DE URGENCIA)" variant of the same product — same code, different wording.
-  "INSCRIPCIÓN DE OTROS LIBROS GENEALÓGICOS (NO ADMITE PLUS DE URGENCIA)": "11100003",
 
 };
 
