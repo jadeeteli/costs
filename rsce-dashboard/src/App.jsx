@@ -339,7 +339,7 @@ const MANUAL_CODE_OVERRIDES = {
 
   "CESION TEMPORAL DE PROPIEDAD DE LA HEMBRA REPRODUCTORA": "11300002",
 
-    "INSCRIPCION DE OTROS LIBROS GENEALOGICOS (NO ADMITE PLUS DE URGENCIA)": "11100003",
+  "INSCRIPCION DE OTROS LIBROS GENEALOGICOS (NO ADMITE PLUS DE URGENCIA)": "11100003",
 
 };
 
@@ -471,6 +471,20 @@ const HIDDEN_PRODUCTS = new Set([
   "IMPRESO ALTA DE CAMADA (PERROS DE RAZA)",
   "SIN DESCRIPCIÓN (tasa fija 0,25€)",
   "SIN DESCRIPCIÓN (revisar origen - tasa fija 0,25€)",
+]);
+
+const HIDDEN_IN_TARIFA_WEB = new Set([
+  "EXCEPCION, RECARGO 300% (más de 12 meses y menos de 18) Art, 5.k) Reglamento L.O.E.",
+  "FORMULARIO IDENTIFICACIÓN (por cachorro al notificar nacimiento)",
+  "INSCRIPCIÓN CACHORRO PREMIUM LOE/RRC",
+  "INSCRIPCIÓN CACHORRO RAZAS ESPAÑOLAS BONIFICADAS ( Del 01/05/2023 al 30/04/2024)",
+  "INSCRIPCIÓN CACHORRO EN EL REGISTRO DE GRUPOS ÉTNICOS",
+  "INSCRIPCIÓN CACHORRO ACCESS LBO/RBR",
+  "RECARGO POR INSCRIPCIÓN DE CACHORRO con más de 6 meses y menos de 9 meses de edad",
+  "RECARGO POR INSCRIPCIÓN DE CACHORRO con más de 9 meses y menos de 12 meses de edad",
+  "RECARGO POR INSCRIPCIÓN DE CACHORRO ACCESS LBO/RBR con más de 6 meses y menos de 9 meses de edad",
+  "RECARGO POR INSCRIPCION DE CACHORROACCESS LBO RBR CON MAS DE 9 MESES Y MENOS",
+  "RECARGO POR INSCRIPCION DE CACHORROACCESS LBO RBR CON MAS DE 12 MESES Y MENOS",
 ]);
 
 
@@ -1597,7 +1611,7 @@ function TarifaWebTab({ products, categories, data, years, year, setYear, produc
   const rowsByCategory = useMemo(() => {
     const byCat = {};
     for (const p of products) {
-      if (HIDDEN_PRODUCTS.has(p)) continue;
+      if (HIDDEN_PRODUCTS.has(p) || HIDDEN_IN_TARIFA_WEB.has(p)) continue;
       const rec = data[p];
       const cat = rec.category || "Sin categorizar";
       const memberEntry = valueForYear(rec.prices.Member || [], "with_vat", year);
