@@ -251,6 +251,17 @@ const MANUAL_CODE_OVERRIDES = {
   "TRAMITACIÓN URGENTE DE CERTIFICADOS DE TRABAJO": "12100004",
   "ANOTACIÓN PRUEBA DE DISPLASIA": "50000005",
 
+  // Fix: "3"/"4" never token-match "TRES"/"CUATRO", so these tie in fuzzy
+  // scoring and the alphabetically-earlier "CUATRO" steals the 3-gen code.
+  // Pin all four pairs explicitly.
+  "PEDIGREE_RSCE PLUS TRES GENERACIONES CON TRANSFERENCIA": "11200024",
+  "PEDIGREE_RSCE PLUS CUATRO GENERACIONES CON TRANSFERENCIA": "11200025",
+  "MEJORA A PEDIGREE_RSCE PLUS TRES GENERACIONES SIN TRANSFERENCIA": "11200027",
+  "MEJORA A PEDIGREE_RSCE PLUS CUATRO GENERACIONES SIN TRANSFERENCIA": "11200028",
+
+  // Typo'd XLSX name ("PEDRIGREE_RESCE", "ACCES") makes fuzzy match fragile — pin it.
+  "MEJORA DE PEDIGREE_RSCE ACCESS RBR A PEDIGREE_RSCE PREMIUM RRC SIN TRANSFERENCIA": "11200034",
+
   // --- New overrides found from the highlighted cells in Tarifa_Publicada_Web_2026 ---
 
   // 36000004: code exists in CODE_MAP but under wording ("...JAURÍA GRUPO 6º") too different
